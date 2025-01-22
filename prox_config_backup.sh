@@ -29,6 +29,12 @@ HEALTHCHECKS_URL=https://hc-ping.com/your_uuid_here
 
 ###########################
 
+# Mount volume from a "dumb" LXC container
+
+#vmid="${1}" # taken from the first argument
+vmid=106 # hardcoded
+mntdir="$(pct mount $vmid | cut -d"'" -f2)"
+
 # Set terminal to "dumb" if not set (cron compatibility)
 export TERM=${TERM:-dumb}
 
@@ -36,7 +42,10 @@ export TERM=${TERM:-dumb}
 set -e
 
 # Set backup directory to default OR environment variable
-_bdir=${BACK_DIR:-$DEFAULT_BACK_DIR}
+#_bdir=${BACK_DIR:-$DEFAULT_BACK_DIR}
+_bdir="${mntdir}"/root/$(hostname)
+
+echo '_bdir' $_bdir
 
 # Check backup directory exists
 if [[ ! -d "${_bdir}" ]] ; then
@@ -198,3 +207,9 @@ copyfilesystem
 #startservices
 
 compressandarchive
+
+#unmount the LXC volume
+owner="$(ls -l  "${_bdir}" | tail -n+2 | head -n1 | cut -d" " -f4)"
+chown -R ${owner}:${owner} "${_bdir}"
+echo 'Unmounting ' "${_bdir}"
+pct unmount $vmid
