@@ -33,6 +33,9 @@ HEALTHCHECKS_URL=https://hc-ping.com/your_uuid_here
 
 #vmid="${1}" # taken from the first argument
 vmid=106 # hardcoded
+# unmount if it is locked:
+$(pct list | grep $vmid | grep -qe ' mounted ') && pct unmount $vmid
+# then mount
 mntdir="$(pct mount $vmid | cut -d"'" -f2)"
 
 # Set terminal to "dumb" if not set (cron compatibility)
